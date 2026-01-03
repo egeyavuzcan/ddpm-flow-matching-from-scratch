@@ -18,7 +18,7 @@ pip install -r requirements.txt
 python scripts/quick_test.py
 ```
 
-### Training on Colab (A100 Recommended)
+### Training 
 
 ```bash
 # DDPM Training 
