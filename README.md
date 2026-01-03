@@ -10,13 +10,6 @@ From-scratch implementations of DDPM and Flow Matching using low-dimensional mat
 - Step-by-step computations with 2×2 matrices
 - Educational resource for learning generative modeling fundamentals
 
-## What This Is NOT
-
-- Production-ready implementation
-- High-dimensional image generation
-- Optimized for performance
-
----
 
 ## Documentation
 
