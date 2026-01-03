@@ -1,2 +1,38 @@
-# ddpm-flow-matching-from-scratch
-A collection of from-scratch implementations for DDPM and Flow Matching algorithms, specifically applied to low dimension matrix datasets. This repository serves as a mathematical playground to explore generative dynamics, vector fields, and probability paths in low-dimensional spaces
+# DDPM vs Flow Matching: From Scratch
+
+From-scratch implementations of DDPM and Flow Matching using low-dimensional matrices.
+
+---
+
+## What This Is
+
+- Mathematical playground for understanding diffusion models
+- Step-by-step computations with 2×2 matrices
+- Educational resource for learning generative modeling fundamentals
+
+## What This Is NOT
+
+- Production-ready implementation
+- High-dimensional image generation
+- Optimized for performance
+
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [DDPM vs Flow Matching Deep Dive](docs/ddpm_vs_flow_matching_deep_dive.md) | Detailed comparison with 2×2 matrix examples |
+
+---
+
+## References
+
+- [DDPM (Ho et al., 2020)](https://arxiv.org/abs/2006.11239)
+- [Flow Matching (Lipman et al., 2022)](https://arxiv.org/abs/2210.02747)
+
+---
+
+## License
+
+MIT
