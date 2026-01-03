@@ -1,0 +1,16 @@
+# Flow Matching training configuration for CIFAR-10
+# Inherits from base.yaml
+
+# Training overrides for Flow Matching
+training:
+  epochs: 100
+  learning_rate: 0.0002
+
+# Flow Matching settings
+flow_matching:
+  sigma_min: 0.0
+
+# Faster sampling than DDPM
+sampling:
+  fm_steps: 50
+  fm_solver: "euler"

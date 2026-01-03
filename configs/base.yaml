@@ -1,0 +1,53 @@
+# Base configuration for diffusion training
+# All other configs inherit from this
+
+# Model
+model:
+  type: "unet_small"  # "unet" for full model, "unet_small" for quick experiments
+  num_classes: 10      # CIFAR-10 classes
+  image_size: 32
+
+# Dataset
+dataset:
+  name: "cifar10"
+  root: "./data"
+  batch_size: 128
+  num_workers: 4
+
+# Training
+training:
+  epochs: 100
+  learning_rate: 0.0002
+  weight_decay: 0.0
+  grad_clip: 1.0
+  save_every: 10      # Save checkpoint every N epochs
+  log_interval: 100   # Log every N steps
+
+# Diffusion (DDPM specific)
+ddpm:
+  num_timesteps: 1000
+  schedule_type: "linear"  # "linear" or "cosine"
+  beta_start: 0.0001
+  beta_end: 0.02
+
+# Flow Matching specific
+flow_matching:
+  sigma_min: 0.0
+
+# Sampling
+sampling:
+  batch_size: 64
+  ddpm_steps: 1000
+  fm_steps: 50
+  fm_solver: "euler"  # "euler" or "heun"
+
+# Paths
+paths:
+  output_dir: "./outputs"
+  checkpoint_dir: "./outputs/checkpoints"
+  log_dir: "./outputs/logs"
+  sample_dir: "./outputs/samples"
+
+# Device
+device: "cuda"  # "cuda" or "cpu"
+seed: 42

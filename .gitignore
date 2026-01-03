@@ -212,3 +212,5 @@ outputs/
 *.pt
 *.pth
 *.ckpt
+logs/
+runs/

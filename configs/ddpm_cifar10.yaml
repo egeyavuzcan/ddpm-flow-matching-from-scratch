@@ -1,0 +1,12 @@
+# DDPM training configuration for CIFAR-10
+# Inherits from base.yaml
+
+# Training overrides for DDPM
+training:
+  epochs: 100
+  learning_rate: 0.0002
+
+# Use cosine schedule for better quality
+ddpm:
+  num_timesteps: 1000
+  schedule_type: "cosine"
