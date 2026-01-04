@@ -134,10 +134,12 @@ def main():
     
     # Create sampler and generate
     if args.method == "ddpm":
-        steps = args.steps or 1000
-        print(f"Using DDPM sampler with {steps} steps...")
+        inference_steps = args.steps or 1000
+        print(f"Using DDPM sampler with {inference_steps} inference steps...")
         
-        schedule = NoiseSchedule(num_timesteps=steps, schedule_type="cosine")
+        # IMPORTANT: Use the SAME schedule as training (1000 timesteps)
+        # The sampler will skip steps if inference_steps < 1000
+        schedule = NoiseSchedule(num_timesteps=1000, schedule_type="cosine")
         sampler = DDPMSampler(model, schedule, device)
         
         samples = sampler.sample(
@@ -145,6 +147,7 @@ def main():
             image_size=32,
             class_label=class_labels,
             show_progress=True,
+            num_inference_steps=inference_steps,
         )
     else:  # flow_matching
         steps = args.steps or 50

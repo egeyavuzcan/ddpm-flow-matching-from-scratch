@@ -153,6 +153,34 @@ sampling:
 
 ---
 
+## 📈 Results
+
+### Training Loss Comparison (100 Epochs, UNet)
+
+![Training Loss](outputs/results/training_loss_comparison.png)
+
+**Key Observations:**
+- **DDPM**: Lower loss (~0.03) but predicts noise ε
+- **Flow Matching**: Higher loss (~0.16) but predicts velocity v
+- ⚠️ **Loss values are NOT comparable** - different prediction targets!
+
+### Sample Quality
+
+**Flow Matching (300 epochs):**
+
+![Flow Matching Samples](outputs/samples/epoch_310/flow_matching/sample_flow_matching_grid.png)
+
+*High-quality, diverse CIFAR-10 samples showing airplanes, cars, animals, and ships with clear details.*
+
+**DDPM vs Flow Matching (100 epochs):**
+
+![Horse Comparison](outputs/comparison/class_7_horse.png)
+
+*Top: DDPM (noisy), Bottom: Flow Matching (smooth and coherent)*
+
+
+---
+
 ## 🧪 Testing
 
 ```bash

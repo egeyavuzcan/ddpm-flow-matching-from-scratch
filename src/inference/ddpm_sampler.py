@@ -48,6 +48,7 @@ class DDPMSampler:
         channels: int = 3,
         class_label: Optional[Tensor] = None,
         show_progress: bool = True,
+        num_inference_steps: Optional[int] = None,
     ) -> Tensor:
         """
         Generate samples using the reverse process.
@@ -58,6 +59,8 @@ class DDPMSampler:
             channels: Number of channels (3 for RGB)
             class_label: (B,) class labels for conditional generation
             show_progress: Show progress bar
+            num_inference_steps: Number of steps to use (default: use all timesteps)
+                                If less than num_timesteps, will skip steps uniformly
         
         Returns:
             (B, C, H, W) generated images in [-1, 1]
@@ -72,10 +75,17 @@ class DDPMSampler:
         if class_label is not None:
             class_label = class_label.to(self.device)
         
-        # Reverse process: t = T-1 → 0
-        timesteps = reversed(range(self.num_timesteps))
+        # Determine timestep sequence
+        if num_inference_steps is None or num_inference_steps >= self.num_timesteps:
+            # Use all timesteps
+            timesteps = list(reversed(range(self.num_timesteps)))
+        else:
+            # Skip timesteps uniformly
+            stride = self.num_timesteps // num_inference_steps
+            timesteps = list(range(self.num_timesteps - 1, 0, -stride))
+        
         if show_progress:
-            timesteps = tqdm(timesteps, desc="Sampling", total=self.num_timesteps)
+            timesteps = tqdm(timesteps, desc=f"DDPM ({len(timesteps)} steps)")
         
         for t in timesteps:
             x = self._reverse_step(x, t, class_label)

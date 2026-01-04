@@ -35,9 +35,9 @@ CIFAR10_CLASSES = [
 ]
 
 
-def load_model(checkpoint_path: str, device: torch.device):
+def load_model(checkpoint_path: str, device: torch.device, model_type: str = "unet_small"):
     """Load trained model from checkpoint."""
-    model = create_model("unet_small", num_classes=10, image_size=32)
+    model = create_model(model_type, num_classes=10, image_size=32)
     checkpoint = torch.load(checkpoint_path, map_location=device)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
@@ -148,8 +148,8 @@ def main():
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--num_per_class", type=int, default=4)
     parser.add_argument("--ddpm_steps", type=int, default=1000)
-    parser.add_argument("--fm_steps", type=int, default=50)
-    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--classes", type=int, nargs="+", default=None,
+                      help="Specific class indices to generate")
     args = parser.parse_args()
     
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
@@ -163,11 +163,11 @@ def main():
     # Load models
     print("\n=== Loading Models ===")
     print(f"DDPM checkpoint: {args.ddpm_checkpoint}")
-    ddpm_model, ddpm_epoch = load_model(args.ddpm_checkpoint, device)
+    ddpm_model, ddpm_epoch = load_model(args.ddpm_checkpoint, device, args.model_type)
     print(f"  Loaded (epoch {ddpm_epoch})")
     
     print(f"Flow Matching checkpoint: {args.fm_checkpoint}")
-    fm_model, fm_epoch = load_model(args.fm_checkpoint, device)
+    fm_model, fm_epoch = load_model(args.fm_checkpoint, device, args.model_type)
     print(f"  Loaded (epoch {fm_epoch})")
     
     # Create samplers
@@ -177,7 +177,10 @@ def main():
     
     # Generate samples for all classes
     print("\n=== Generating Samples ===")
-    classes = list(range(10))  # All CIFAR-10 classes
+    if args.classes:
+        classes = args.classes
+    else:
+        classes = list(range(10))  # All CIFAR-10 classes
     
     # DDPM sampling
     print(f"DDPM ({args.ddpm_steps} steps)...")
