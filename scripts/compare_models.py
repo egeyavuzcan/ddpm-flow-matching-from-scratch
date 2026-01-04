@@ -148,6 +148,10 @@ def main():
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--num_per_class", type=int, default=4)
     parser.add_argument("--ddpm_steps", type=int, default=1000)
+    parser.add_argument("--fm_steps", type=int, default=50)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--model_type", type=str, default="unet_small",
+                      help="Model type (unet_small, dit_s, etc.)")
     parser.add_argument("--classes", type=int, nargs="+", default=None,
                       help="Specific class indices to generate")
     args = parser.parse_args()
@@ -215,11 +219,11 @@ def main():
     print(f"  Saved: {output_dir / 'flow_matching_samples.png'}")
     
     # Create comparison for each class
-    for class_idx in classes:
+    for i, class_idx in enumerate(classes):
         class_name = CIFAR10_CLASSES[class_idx]
         
         # Get samples for this class
-        start_idx = class_idx * args.num_per_class
+        start_idx = i * args.num_per_class
         end_idx = start_idx + args.num_per_class
         
         ddpm_class = ddpm_samples[start_idx:end_idx]

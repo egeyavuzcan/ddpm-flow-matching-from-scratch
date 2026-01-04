@@ -167,6 +167,29 @@ Top row DDPM, bottom row Flow Matching for each class:
 
 ---
 
+## 🆕 DiT (Diffusion Transformer) Results
+
+We also trained a **DiT-S** (Small) model for 200 epochs to compare with UNet.
+
+### Training Loss Comparison (DiT-S)
+![DiT Loss](outputs/dit_comparison/dit_training_loss.png)
+
+| Model | Method | Epochs | Final Loss | Comment |
+|-------|--------|--------|------------|---------|
+| **UNet (Small)** | DDPM | 100 | **0.033** | 🏆 Best convergence |
+| **DiT-S** | DDPM | 200 | 0.054 | Slower convergence (Transformers need more training) |
+| **UNet (Small)** | Flow Matching | 100 | 0.161 | Loss scale not comparable to DDPM |
+
+**Key Observations:**
+1.  **Convergence:** DiT-S has a higher final loss (0.054) than UNet (0.033) even with double the epochs (200 vs 100). This is expected as Transformers typically lack the inductive bias of CNNs and require more training to learn spatial relationships.
+2.  **Architecture:** DiT uses `patch_size=4` and processes images as sequences, whereas UNet processes them as 2D maps.
+
+### Visual Comparison (Frog)
+![DiT Comparison Frog](outputs/dit_comparison/class_6_frog.png)
+*Left: DDPM (Noisy), Right: Flow Matching (Clean)*
+
+---
+
 ## 📝 Conclusion
 
 | Criterion | Winner | Reason |

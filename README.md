@@ -178,6 +178,11 @@ sampling:
 
 *Top: DDPM (noisy), Bottom: Flow Matching (smooth and coherent)*
 
+### DiT (Diffusion Transformer) Results
+We evaluated **DiT-S** (Small) alongside UNet.
+- **DiT-S (DDPM)** achieved a loss of **0.054** after 200 epochs (vs UNet 0.033).
+- Transformers generally require more training than CNNs for this task.
+- Full analysis: [docs/results.md](docs/results.md)
 
 ---
 

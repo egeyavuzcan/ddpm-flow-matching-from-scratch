@@ -37,9 +37,14 @@ def main():
         print("Error: Could not extract data from either log")
         return
 
-    # Create plot
     plt.figure(figsize=(10, 6))
     
+    # Smooth data
+    def smooth(y, box_pts):
+        box = np.ones(box_pts)/box_pts
+        y_smooth = np.convolve(y, box, mode='same')
+        return y_smooth
+
     if flow_data:
         steps_f, values_f = zip(*flow_data)
         plt.plot(steps_f, values_f, 'b-', alpha=0.3)
