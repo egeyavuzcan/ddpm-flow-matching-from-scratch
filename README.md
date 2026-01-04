@@ -39,7 +39,12 @@ python scripts/train.py --method flow_matching --device cuda
 
 **DiT-S (Better Quality):**  
 ```bash
-# Flow Matching + DiT-S (23M params)
+# DDPM + DiT-S
+python scripts/train.py --method ddpm \
+    --config configs/dit_s_ddpm_cifar10.yaml \
+    --device cuda
+
+# Flow Matching + DiT-S (Recommended)
 python scripts/train.py --method flow_matching \
     --config configs/dit_s_cifar10.yaml \
     --device cuda
@@ -78,7 +83,9 @@ ddpm-flow-matching-from-scratch/
 ├── configs/              # YAML configurations
 │   ├── base.yaml
 │   ├── ddpm_cifar10.yaml
-│   └── flow_matching_cifar10.yaml
+│   ├── flow_matching_cifar10.yaml
+│   ├── dit_s_ddpm_cifar10.yaml
+│   └── dit_s_cifar10.yaml
 ├── scripts/              # CLI scripts
 │   ├── train.py          # Training script
 │   ├── sample.py         # Sampling script

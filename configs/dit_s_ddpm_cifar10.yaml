@@ -1,0 +1,23 @@
+# DiT-S with DDPM training configuration for CIFAR-10
+# Inherits from base.yaml
+
+# Model override
+model:
+  type: "dit_s"  # DiT-S (~23M params for 32x32)
+
+# Training overrides
+training:
+  epochs: 100
+  learning_rate: 0.0001  # Lower LR for DiT (transformers are more sensitive)
+  weight_decay: 0.01     # Slight regularization
+
+# DDPM settings
+ddpm:
+  num_timesteps: 1000
+  schedule_type: "cosine"
+  beta_start: 0.0001
+  beta_end: 0.02
+
+# DDPM sampling
+sampling:
+  ddpm_steps: 1000
