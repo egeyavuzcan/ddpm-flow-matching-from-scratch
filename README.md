@@ -1,5 +1,14 @@
 # DDPM vs Flow Matching: From Scratch
 
+## 🎯 Project Goal
+The primary objective of this project is to demonstrate the **mathematical and implementation differences** between **DDPM** (Denoising Diffusion Probabilistic Models) and **Flow Matching**.
+
+We validate these differences by implementing and training both methods across two distinct architectures to prove their performance and characteristics:
+1.  **UNet** (Traditional CNN-based architecture)
+2.  **DiT** (Modern Transformer-based architecture)
+
+This dual-architecture approach provides concrete evidence of how each method behaves under different structural constraints.
+
 Complete implementations of **DDPM** and **Flow Matching** for CIFAR-10 image generation.
 
 **Architectures:**
