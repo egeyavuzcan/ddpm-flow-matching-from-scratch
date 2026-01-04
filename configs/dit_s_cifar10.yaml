@@ -1,0 +1,21 @@
+# DiT-S training configuration for CIFAR-10
+# Inherits from base.yaml
+
+# Model override
+model:
+  type: "dit_s"  # DiT-S (~23M params for 32x32)
+
+# Training overrides
+training:
+  epochs: 100  #Start with 100 epochs
+  learning_rate: 0.0001  # Lower LR for DiT (transformers are more sensitive)
+  weight_decay: 0.01  # Slight regularization
+
+# Flow Matching settings
+flow_matching:
+  sigma_min: 0.0
+
+# Faster sampling with transformer
+sampling:
+  fm_steps: 50
+  fm_solver: "euler"

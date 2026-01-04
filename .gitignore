@@ -209,8 +209,22 @@ __marimo__/
 # ML Data & Outputs
 data/
 outputs/
+samples/
+checkpoints/
 *.pt
 *.pth
 *.ckpt
 logs/
 runs/
+wandb/
+tensorboard/
+*.tfevents.*
+
+# Generated images
+*.png
+*.jpg
+*.jpeg
+!docs/*.png
+!docs/*.jpg
+!*.md
+

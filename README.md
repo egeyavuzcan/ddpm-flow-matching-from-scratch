@@ -2,6 +2,14 @@
 
 Complete implementations of **DDPM** and **Flow Matching** for CIFAR-10 image generation.
 
+**Architectures:**
+- 🏛️ **UNet** (CNN-based) - 2.7M params
+- 🤖 **DiT-S** (Transformer-based) - 23.4M params
+
+**Methods:**
+- 📊 **DDPM** - 1000 step diffusion
+- ⚡ **Flow Matching** - 50 step ODE 
+
 ## 🚀 Quick Start
 
 ### Installation
@@ -20,15 +28,26 @@ python scripts/quick_test.py
 
 ### Training 
 
+**UNet-Small (Fast):**
 ```bash
-# DDPM Training 
+# DDPM Training
 python scripts/train.py --method ddpm --device cuda
 
-# Flow Matching Training 
+# Flow Matching Training
 python scripts/train.py --method flow_matching --device cuda
+```
+
+**DiT-S (Better Quality):**  
+```bash
+# Flow Matching + DiT-S (23M params)
+python scripts/train.py --method flow_matching \
+    --config configs/dit_s_cifar10.yaml \
+    --device cuda
 
 # Quick test (1 epoch)
-python scripts/train.py --method ddpm --epochs 1 --device cuda
+python scripts/train.py --method flow_matching \
+    --config configs/dit_s_cifar10.yaml \
+    --epochs 1 --device cuda
 ```
 
 ### Generate Samples
@@ -37,7 +56,7 @@ python scripts/train.py --method ddpm --epochs 1 --device cuda
 # DDPM Sampling (1000 steps)
 python scripts/sample.py --method ddpm --checkpoint outputs/ddpm/checkpoints/final.pt
 
-# Flow Matching Sampling (50 steps - 20x faster!)
+# Flow Matching Sampling (50 steps )
 python scripts/sample.py --method flow_matching --checkpoint outputs/flow_matching/checkpoints/final.pt
 
 # Generate specific classes (0=airplane, 1=automobile, 5=dog, etc.)
@@ -66,7 +85,9 @@ ddpm-flow-matching-from-scratch/
 │   └── quick_test.py     # Pipeline validation
 ├── src/
 │   ├── dataset/          # CIFAR-10 data loading
-│   ├── modeling/         # UNet architecture
+│   ├── modeling/         # Model architectures
+│   │   ├── unet/         # UNet (CNN-based)
+│   │   └── dit/          # DiT (Transformer-based) ✨
 │   ├── diffusion/        # DDPM & Flow Matching
 │   ├── training/         # Trainers with TensorBoard
 │   ├── inference/        # Samplers
@@ -102,12 +123,26 @@ training:
 
 ddpm:
   num_timesteps: 1000
-  schedule_type: "cosine"  # Better than linear
+  schedule_type: "cosine"  
 
 sampling:
-  ddpm_steps: 1000        # DDPM: slow but stable
-  fm_steps: 50            # Flow Matching: 20x faster!
+  ddpm_steps: 1000        
+  fm_steps: 50            
 ```
+
+---
+
+## 🏗️ Model Architectures
+
+| Model | Type | Params | Training Time (100 ep) | Quality | Use Case |
+|-------|------|--------|----------------------|---------|----------|
+| **UNet-Small** | CNN | 2.7M | 2-3h (A100) | Good | Fast iteration |
+| **DiT-S** | Transformer | 23.4M | 10-12h (A100) | Better | Final model |
+
+**DiT-S Advantages:**
+- 🎯 Better sample quality (lower loss)
+- 📈 Scales well with more data/compute
+- 🔬 Modern architecture (used in DALL-E 3, SD3)
 
 ---
 
@@ -144,6 +179,7 @@ python scripts/quick_test.py
 
 - [DDPM (Ho et al., 2020)](https://arxiv.org/abs/2006.11239)
 - [Flow Matching (Lipman et al., 2022)](https://arxiv.org/abs/2210.02747)
+- [DiT (Peebles & Xie, 2023)](https://arxiv.org/abs/2212.09748)
 - [Improved DDPM (Nichol & Dhariwal, 2021)](https://arxiv.org/abs/2102.09672)
 
 ---

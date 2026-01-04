@@ -5,6 +5,7 @@ from typing import Optional, Dict, Any
 import torch.nn as nn
 
 from .unet.unet import UNet, UNetSmall
+from .dit.dit import DiT_S, DiT_B, DiT_L, DiT_XL
 
 
 def create_model(
@@ -15,7 +16,7 @@ def create_model(
     Factory function to create models.
     
     Args:
-        model_type: Type of model ("unet", "unet_small", "dit" in future)
+        model_type: Type of model ("unet", "unet_small", "dit_s", "dit_b", "dit_l", "dit_xl")
         **kwargs: Model-specific arguments
     
     Returns:
@@ -23,11 +24,15 @@ def create_model(
     
     Example:
         model = create_model("unet", num_classes=10, image_size=32)
+        model = create_model("dit_s", num_classes=10, img_size=32)
     """
     model_registry = {
         "unet": UNet,
         "unet_small": UNetSmall,
-        # "dit": DiT,  # Coming in Phase 2
+        "dit_s": DiT_S,
+        "dit_b": DiT_B,
+        "dit_l": DiT_L,
+        "dit_xl": DiT_XL,
     }
     
     if model_type not in model_registry:
