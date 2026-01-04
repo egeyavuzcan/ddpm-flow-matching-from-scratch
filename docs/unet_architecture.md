@@ -1,10 +1,10 @@
 # UNet Architecture Deep Dive
 
-Bu dokümanda, diffusion modelleri için implement ettiğimiz UNet mimarisinin detaylı açıklamasını bulacaksınız.
+This document provides a detailed explanation of the UNet architecture implemented for our diffusion models.
 
 ---
 
-## 📐 Genel Mimari Diyagramı
+## 📐 General Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -132,24 +132,24 @@ Bu dokümanda, diffusion modelleri için implement ettiğimiz UNet mimarisinin d
 
 ---
 
-## 🧩 Bileşenlerin Detaylı Açıklaması
+## 🧩 Detailed Component Explanation
 
 ### 1. Time Embedding (Sinusoidal Position Embedding)
 
-**Amaç:** Model'a "şu an hangi t'deyiz" bilgisini vermek.
+**Purpose:** Provide the model with information about "what t we are currently at".
 
-**Neden önemli?**
-- `t=0`: Görüntü neredeyse clean, az noise var
-- `t=999`: Pure Gaussian noise, model her şeyi tahmin etmeli
-- Bu bilgi olmadan model farklı noise seviyelerini ayırt edemez!
+**Why is it important?**
+- `t=0`: Image is nearly clean, little noise.
+- `t=999`: Pure Gaussian noise, model must predict everything.
+- Without this information, the model cannot distinguish between different noise levels!
 
-**Formül:**
+**Formula:**
 ```
 PE(t, 2i) = sin(t / 10000^(2i/dim))
 PE(t, 2i+1) = cos(t / 10000^(2i/dim))
 ```
 
-**Shape akışı:**
+**Shape Flow:**
 ```
 Input:  t = (B,)           # Batch of timesteps, e.g., [0, 500, 999, 100]
         ↓
@@ -160,7 +160,7 @@ MLP: Linear → SiLU → Linear
 Output: (B, dim)           # e.g., (4, 256) - ready to broadcast
 ```
 
-**Kod:**
+**Code:**
 ```python
 # embeddings.py
 class SinusoidalPositionEmbedding(nn.Module):
@@ -175,13 +175,13 @@ class SinusoidalPositionEmbedding(nn.Module):
 
 ### 2. Class Embedding (nn.Embedding)
 
-**Amaç:** Model'a "hangi sınıfı üretmeli" bilgisini vermek.
+**Purpose:** Provide the model with information about "which class to generate".
 
-**Neden önemli?**
-- Unconditional: Rastgele CIFAR-10 görüntüsü üretir
-- Conditional: "Bana bir KEDİ üret" diyebilirsin
+**Why is it important?**
+- Unconditional: Generates a random CIFAR-10 image.
+- Conditional: You can say "generate a CAT for me".
 
-**Shape akışı:**
+**Shape Flow:**
 ```
 Input:  class_label = (B,)     # e.g., [0, 5, 3, 9] (cat, dog, bird, truck)
         ↓
@@ -190,7 +190,7 @@ nn.Embedding(10, dim)
 Output: (B, dim)               # e.g., (4, 256)
 ```
 
-**Time + Class kombinasyonu:**
+**Time + Class Combination:**
 ```python
 t_emb = time_embed(t)         # (B, 256)
 c_emb = class_embed(c)        # (B, 256)
@@ -201,14 +201,14 @@ combined = t_emb + c_emb      # (B, 256) - elementwise addition
 
 ### 3. ResidualBlock
 
-**Amaç:** Feature extraction + time conditioning
+**Purpose:** Feature extraction + time conditioning.
 
-**Neden residual?**
-- Gradient akışını kolaylaştırır
-- Derin ağlarda training stabilitesi sağlar
-- `h + skip` formülü: öğrenilecek şey "fark" olur
+**Why residual?**
+- Facilitates gradient flow.
+- Provides training stability in deep networks.
+- `h + skip` formula: what is learned is the "residual" (difference).
 
-**Yapı:**
+**Structure:**
 ```
 ┌────────────────────────────────────────┐
 │              ResidualBlock             │
@@ -237,7 +237,7 @@ combined = t_emb + c_emb      # (B, 256) - elementwise addition
 └────────────────────────────────────────┘
 ```
 
-**Shape akışı:**
+**Shape Flow:**
 ```
 Input:  x = (B, C_in, H, W)      # e.g., (4, 64, 32, 32)
         t_emb = (B, dim)          # e.g., (4, 256)
@@ -257,7 +257,7 @@ Output: (B, C_out, H, W)         # e.g., (4, 128, 32, 32)
 
 ### 4. Downsample / Upsample
 
-**Amaç:** Spatial resolution değiştirmek
+**Purpose:** Change spatial resolution.
 
 **Downsample (Encoder):**
 ```
@@ -283,18 +283,18 @@ Output: (B, C, 32, 32)   # Spatial size doubled
 
 ### 5. Self-Attention
 
-**Amaç:** Global dependencies yakalamak
+**Purpose:** Capture global dependencies.
 
-**Neden gerekli?**
-- Convolution sadece lokal (3×3 veya 5×5 neighborhood)
-- Uzaktaki pikseller arasındaki ilişkiyi göremez
-- Attention: "Bu piksel, şu uzaktaki pikselle ne kadar ilişkili?"
+**Why is it needed?**
+- Convolution is only local (3×3 or 5×5 neighborhood).
+- It cannot see the relationship between distant pixels.
+- Attention: "How related is this pixel to that distant pixel?"
 
-**Nerede kullanılır?**
-- Düşük resolution'larda (8×8, 16×16)
-- Yüksek resolution'da çok pahalı: O(N²) where N = H×W
+**Where is it used?**
+- At low resolutions (8×8, 16×16).
+- Too expensive at high resolution: O(N²) where N = H×W.
 
-**Yapı:**
+**Structure:**
 ```
 ┌────────────────────────────────────────┐
 │            Self-Attention              │
@@ -332,7 +332,7 @@ Output: (B, C, 32, 32)   # Spatial size doubled
 └────────────────────────────────────────┘
 ```
 
-**Shape akışı:**
+**Shape Flow:**
 ```
 Input:  x = (B, C, H, W)         # e.g., (4, 256, 8, 8)
         ↓
@@ -353,14 +353,14 @@ Output: (B, C, H, W)             # e.g., (4, 256, 8, 8) - same shape!
 
 ### 6. Skip Connections
 
-**Amaç:** Encoder'dan decoder'a bilgi aktarmak
+**Purpose:** Transfer information from Encoder to Decoder.
 
-**Neden önemli?**
-- Downsampling sırasında fine details kayboluyor
-- Skip connections bu detayları korur
-- "U" şeklini oluşturan yapı bu!
+**Why is it important?**
+- Fine details are lost during downsampling.
+- Skip connections preserve these details.
+- This is the structure that forms the "U" shape!
 
-**Görsel:**
+**Visual:**
 ```
 ENCODER                              DECODER
 ────────                             ────────
@@ -377,9 +377,9 @@ ENCODER                              DECODER
       └───────► MIDDLE ────────────────────┘
 ```
 
-**Channel concatenation:**
+**Channel Concatenation:**
 ```python
-# Decoder'da her ResBlock'tan önce:
+# Before each ResBlock in Decoder:
 h = (B, 256, 8, 8)      # Current hidden state
 skip = (B, 256, 8, 8)   # From encoder
 h = torch.cat([h, skip], dim=1)  # → (B, 512, 8, 8)
@@ -459,38 +459,38 @@ output = (4, 3, 32, 32)        # Same shape as input!
 
 ---
 
-## 🎯 Özet: Her Bileşenin Rolü
+## 🎯 Summary: Role of Each Component
 
-| Bileşen | Girdi | Çıktı | Rolü |
+| Component | Input | Output | Role |
 |---------|-------|-------|------|
-| **Time Embed** | `(B,)` | `(B, dim)` | Noise seviyesi bilgisi |
-| **Class Embed** | `(B,)` | `(B, dim)` | Sınıf conditioning |
+| **Time Embed** | `(B,)` | `(B, dim)` | Noise level information |
+| **Class Embed** | `(B,)` | `(B, dim)` | Class conditioning |
 | **conv_in** | `(B,3,H,W)` | `(B,C,H,W)` | Channel projection |
 | **ResBlock** | `(B,C,H,W)` | `(B,C',H,W)` | Feature extraction + t cond. |
-| **Downsample** | `(B,C,H,W)` | `(B,C,H/2,W/2)` | Resolution azalt |
+| **Downsample** | `(B,C,H,W)` | `(B,C,H/2,W/2)` | Reduce resolution |
 | **Attention** | `(B,C,H,W)` | `(B,C,H,W)` | Global relationships |
 | **Middle** | `(B,C,H,W)` | `(B,C,H,W)` | Bottleneck processing |
-| **Upsample** | `(B,C,H,W)` | `(B,C,2H,2W)` | Resolution artır |
-| **Skip cat** | `h + skip` | `concat(h,skip)` | Fine details koru |
+| **Upsample** | `(B,C,H,W)` | `(B,C,2H,2W)` | Increase resolution |
+| **Skip cat** | `h + skip` | `concat(h,skip)` | Preserve fine details |
 | **conv_out** | `(B,C,H,W)` | `(B,3,H,W)` | Final prediction |
 
 ---
 
 ## 💡 Key Insights
 
-1. **Input = Output boyutu:** `(B, 3, 32, 32) → (B, 3, 32, 32)`
-   - Model, görüntü ile aynı boyutta bir "şey" tahmin eder
+1. **Input = Output size:** `(B, 3, 32, 32) → (B, 3, 32, 32)`
+   - The model predicts something of the same size as the image.
    - DDPM: noise ε
    - Flow Matching: velocity v
 
-2. **t embedding her ResBlock'a gider:**
-   - Her layer'da "şu an hangi t'deyiz" bilgisi var
-   - Bu sayede model t=0 vs t=999 farkını öğrenir
+2. **t embedding goes to every ResBlock:**
+   - Every layer knows "what t we are currently at".
+   - This allows the model to learn the difference between t=0 vs t=999.
 
-3. **Attention sadece düşük resolution'da:**
-   - 8×8 = 64 token → 64×64 = 4096 attention hesabı (OK)
-   - 32×32 = 1024 token → 1024×1024 = 1M attention hesabı (TOO SLOW)
+3. **Attention only at low resolution:**
+   - 8×8 = 64 tokens → 64×64 = 4096 attention calculations (OK)
+   - 32×32 = 1024 tokens → 1024×1024 = 1M attention calculations (TOO SLOW)
 
-4. **Skip connections kritik:**
-   - Onsuz model çok kötü performans gösterir
-   - Fine spatial details encoder'dan decoder'a aktarılır
+4. **Skip connections are critical:**
+   - Without them, the model performs very poorly.
+   - Fine spatial details are transferred from encoder to decoder.

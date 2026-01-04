@@ -1,15 +1,15 @@
 # DDPM vs Flow Matching: Training Results
 
-Bu rapor, aynı UNet modeli ve aynı eğitim koşulları altında **DDPM** ve **Flow Matching** yöntemlerinin karşılaştırmasını içerir.
+This report contains a comparison of **DDPM** and **Flow Matching** methods under the same UNet model and training conditions.
 
 ---
 
-## 🔬 Deney Kurulumu
+## 🔬 Experiment Setup
 
-| Parametre | Değer |
+| Parameter | Value |
 |-----------|-------|
-| Model | UNetSmall (~2.7M parametre) |
-| Dataset | CIFAR-10 (50K görüntü) |
+| Model | UNetSmall (~2.7M parameters) |
+| Dataset | CIFAR-10 (50K images) |
 | Image Size | 32×32 |
 | Epochs | 100 |
 | Batch Size | 128 |
@@ -18,7 +18,7 @@ Bu rapor, aynı UNet modeli ve aynı eğitim koşulları altında **DDPM** ve **
 
 ---
 
-## 📊 Training Loss Karşılaştırması
+## 📊 Training Loss Comparison
 
 ### DDPM
 ```
@@ -26,7 +26,7 @@ Initial Loss:  0.1299
 Final Loss:    0.0333
 Min Loss:      0.0178 (step 22700)
 Improvement:   74% ↓
-Trend:         Hala düşüyor (slope: -0.000005)
+Trend:         Still decreasing (slope: -0.000005)
 ```
 
 ### Flow Matching
@@ -35,101 +35,101 @@ Initial Loss:  0.4292
 Final Loss:    0.1606
 Min Loss:      0.1567 (step 38600)
 Improvement:   62% ↓
-Trend:         Hala düşüyor (slope: -0.000054)
+Trend:         Still decreasing (slope: -0.000054)
 ```
 
-### Analiz
+### Analysis
 
-| Metrik | DDPM | Flow Matching | Yorum |
+| Metric | DDPM | Flow Matching | Comment |
 |--------|------|---------------|-------|
-| Final Loss | 0.033 | 0.161 | DDPM loss daha düşük |
-| Görsel Kalite | Noise'lu | Düzgün | **FM çok daha iyi!** |
-| Trend | Yavaş düşüyor | Hızlı düşüyor | FM daha hızlı öğreniyor |
+| Final Loss | 0.033 | 0.161 | DDPM loss is lower |
+| Visual Quality | Noisy | Smooth/Coherent | **FM is much better!** |
+| Trend | Decreasing slowly | Decreasing fast | FM learns faster |
 
 ---
 
-## 🤔 Neden Flow Matching Daha İyi Sonuç Veriyor?
+## 🤔 Why Does Flow Matching Give Better Results?
 
-### 1. Loss Değerleri Yanıltıcı
+### 1. Loss Values Are Misleading
 
-**DDPM loss daha düşük ama görsel kalite daha kötü. Neden?**
+**DDPM loss is lower but visual quality is worse. Why?**
 
-- **DDPM:** Noise tahmin ediyor (`ε_θ`)
-- **Flow Matching:** Velocity tahmin ediyor (`v_θ`)
+- **DDPM:** Predicts noise (`ε_θ`)
+- **Flow Matching:** Predicts velocity (`v_θ`)
 
-Bu iki değer farklı scale'lerde:
-- Noise: `~N(0, 1)` - genellikle küçük değerler
-- Velocity: `x_1 - x_0` - daha büyük range
+These two values are on different scales:
+- Noise: `~N(0, 1)` - usually small values
+- Velocity: `x_1 - x_0` - larger range
 
-**Sonuç:** Loss değerlerini doğrudan karşılaştırmak anlamsız!
+**Conclusion:** Comparing loss values directly is meaningless!
 
-### 2. Sampling Adım Sayısı Farkı
+### 2. Difference in Sampling Steps
 
-Test sırasında kullanılan adımlar:
+Steps used during testing:
 
 | Method | Steps | Per-sample Time |
 |--------|-------|-----------------|
 | DDPM | 100 | 0.88s |
 | Flow Matching | 20 | 0.16s |
 
-**DDPM 1000 adımla eğitildi ama 100 adımla test edildi!**
+**DDPM was trained with 1000 steps but tested with 100 steps!**
 
-Bu ciddi bir kalite kaybına neden oluyor çünkü:
-- DDPM, 1000 adımlık markov zinciri için optimize edildi
-- 100 adımla çalıştırınca aradaki adımlar atlanıyor
-- Model bu "atlama"yı kompanse edemiyor
+This causes significant quality loss because:
+- DDPM is optimized for a 1000-step Markov chain
+- Running with 100 steps skips intermediate steps
+- The model cannot compensate for this "skipping"
 
-### 3. Flow Matching'in Doğal Avantajı
+### 3. Natural Advantage of Flow Matching
 
 ```
 DDPM:          Discrete steps, Markov chain
 Flow Matching: Continuous ODE, smooth trajectory
 ```
 
-**Flow Matching avantajları:**
+**Flow Matching advantages:**
 
 1. **Linear Path:** `x_t = (1-t)·x_0 + t·x_1`
-   - Düz bir çizgi, öğrenmesi kolay
-   - Velocity her yerde constant
+   - A straight line, easy to learn
+   - Velocity is constant everywhere
 
 2. **Flexible Sampling:**
-   - Herhangi bir adım sayısıyla çalışabilir
-   - 20 adım bile iyi sonuç verir
+   - Works with any number of steps
+   - Even 20 steps give good results
 
 3. **Smoother Trajectories:**
-   - ODE çözümü daha stabil
-   - Euler method bile yeterli
+   - ODE solution is more stable
+   - Even Euler method is sufficient
 
-### 4. DDPM Neden Başarısız?
+### 4. Why Did DDPM Fail?
 
 ```
 Training:  t ∈ {0, 1, 2, ..., 999} (1000 discrete steps)
-Testing:   t ∈ {0, 10, 20, ..., 990} (100 steps, 10'ar atlıyor)
+Testing:   t ∈ {0, 10, 20, ..., 990} (100 steps, skipping 10)
 ```
 
-DDPM modeli `t=500`'deki noise'u tahmin etmeyi öğrendi.
-Ama `t=500` test sırasında atlanıyor, model `t=490` ve `t=510`'u görüyor.
+The DDPM model learned to predict noise at `t=500`.
+But during testing, `t=500` is skipped, and the model sees `t=490` and `t=510`.
 
-**Çözüm:** DDPM için ya:
-- 1000 adım kullan (çok yavaş)
-- DDIM sampler kullan (adaptive)
-- Daha düşük timestep'le train et
+**Solution:** For DDPM, either:
+- Use 1000 steps (very slow)
+- Use DDIM sampler (adaptive)
+- Train with fewer timesteps
 
 ---
 
-## 📈 Sonuç Görüntüleri
+## 📈 Result Images
 
-### Flow Matching Örnekleri (İyi Kalite)
+### Flow Matching Samples (Good Quality)
 ![Flow Matching Samples](outputs/comparison/flow_matching_samples.png)
 
-### DDPM Örnekleri (Noise'lu)
+### DDPM Samples (Noisy)
 ![DDPM Samples](outputs/comparison/ddpm_samples.png)
 
-### Class Bazlı Karşılaştırma
+### Class-Based Comparison
 
-Her class için üst satır DDPM, alt satır Flow Matching:
+Top row DDPM, bottom row Flow Matching for each class:
 
-| Class | Karşılaştırma |
+| Class | Comparison |
 |-------|---------------|
 | Airplane | ![](outputs/comparison/class_0_airplane.png) |
 | Automobile | ![](outputs/comparison/class_1_automobile.png) |
@@ -138,9 +138,9 @@ Her class için üst satır DDPM, alt satır Flow Matching:
 
 ---
 
-## ⏱️ Hız Karşılaştırması
+## ⏱️ Speed Comparison
 
-| Metod | Adım | Toplam Süre | Örnek Başına |
+| Method | Steps | Total Time | Per Sample |
 |-------|------|-------------|--------------|
 | DDPM (100 steps) | 100 | 17.6s | 0.88s |
 | Flow Matching (20 steps) | 20 | 3.3s | 0.16s |
@@ -148,40 +148,40 @@ Her class için üst satır DDPM, alt satır Flow Matching:
 
 ---
 
-## 🎯 Öneriler
+## 🎯 Recommendations
 
-### DDPM İyileştirmek İçin:
-1. **1000 adım kullan:** `--ddpm_steps 1000` (yavaş ama doğru)
-2. **DDIM Sampler ekle:** Daha az adımla iyi sonuç verir
-3. **Cosine schedule kullan:** Daha smooth geçişler
+### To Improve DDPM:
+1. **Use 1000 steps:** `--ddpm_steps 1000` (slow but correct)
+2. **Add DDIM Sampler:** Gives good results with fewer steps
+3. **Use Cosine Schedule:** Smoother transitions
 
-### Flow Matching İyileştirmek İçin:
-1. **Daha fazla epoch:** 200-300 epoch dene
-2. **Heun solver:** `--solver heun` (2x yavaş, daha iyi)
-3. **Larger model:** `unet` kullan (`unet_small` yerine)
+### To Improve Flow Matching:
+1. **More epochs:** Try 200-300 epochs
+2. **Heun solver:** `--solver heun` (2x slower, better quality)
+3. **Larger model:** Use `unet` instead of `unet_small`
 
-### Genel:
-- **EMA (Exponential Moving Average):** Daha stabil sonuçlar
-- **CFG (Classifier-Free Guidance):** Daha keskin görüntüler
+### General:
+- **EMA (Exponential Moving Average):** More stable results
+- **CFG (Classifier-Free Guidance):** Sharper images
 - **Learning Rate Scheduling:** Cosine decay
 
 ---
 
-## 📝 Sonuç
+## 📝 Conclusion
 
-| Kriter | Kazanan | Sebep |
+| Criterion | Winner | Reason |
 |--------|---------|-------|
-| **Görsel Kalite** | 🏆 Flow Matching | Düzgün, tanınabilir görüntüler |
-| **Training Speed** | Berabere | Aynı epoch sayısı |
-| **Sampling Speed** | 🏆 Flow Matching | 5.4x daha hızlı |
-| **Flexibility** | 🏆 Flow Matching | Herhangi step sayısı çalışır |
-| **Theoretical Beauty** | DDPM | Derin matematiksel temeller |
+| **Visual Quality** | 🏆 Flow Matching | Smooth, recognizable images |
+| **Training Speed** | Tie | Same number of epochs |
+| **Sampling Speed** | 🏆 Flow Matching | 5.4x faster |
+| **Flexibility** | 🏆 Flow Matching | Works with any step count |
+| **Theoretical Beauty** | DDPM | Deep mathematical foundations |
 
-**Sonuç:** Pratik uygulamalar için **Flow Matching** tercih edilmeli.
+**Conclusion:** **Flow Matching** should be preferred for practical applications.
 
 ---
 
-## 📚 Referanslar
+## 📚 References
 
 1. [DDPM - Ho et al., 2020](https://arxiv.org/abs/2006.11239)
 2. [Flow Matching - Lipman et al., 2022](https://arxiv.org/abs/2210.02747)
