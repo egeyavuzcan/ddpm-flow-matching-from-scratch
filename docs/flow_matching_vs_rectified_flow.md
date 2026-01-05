@@ -89,7 +89,149 @@ Bizim bağlamımızda:
 
 ---
 
-## 5. Kodda Ne Değişirdi?
+## 5. 🧮 Matematiksel Örnek: 2×2 Matris ile Görselleştirme
+
+Kavramları somutlaştırmak için basit bir 2 boyutlu örnek üzerinden gidelim.
+
+### Senaryo: İki Nokta Dağılımı
+**Gürültü Dağılımı ($\pi_0$):** İki nokta
+- $A = (0, 0)$
+- $B = (0, 1)$
+
+**Veri Dağılımı ($\pi_1$):** İki nokta
+- $X = (1, 0)$
+- $Y = (1, 1)$
+
+### Adım 1: Standard Flow Matching (Independent Coupling)
+
+Rastgele eşleştirme yapıyoruz. Her eğitim adımında rastgele bir gürültü ve rastgele bir veri noktası seçiliyor:
+
+```
+Olası Eşleşmeler:
+(A → X): (0,0) → (1,0)  ─────→  Velocity: (1, 0)
+(A → Y): (0,0) → (1,1)  ───↗    Velocity: (1, 1)
+(B → X): (0,1) → (1,0)  ───↘    Velocity: (1, -1)
+(B → Y): (0,1) → (1,1)  ─────→  Velocity: (1, 0)
+```
+
+**Görselleştirme:**
+```
+      Y(1,1)
+       ↑ ↗
+   B ──┼──→
+       ↘ ↓
+   A ────→ X(1,0)
+```
+
+**Problem:** A noktasından bakıldığında, model hem X'e hem Y'ye giden yolları öğreniyor. Ortalama velocity:
+$$
+\bar{v}(A) = \frac{1}{2}[(1,0) + (1,1)] = (1, 0.5)
+$$
+
+Bu ortalama, **ne X'e ne de Y'ye** tam olarak gidiyor! "Crossing trajectories" problemi budur.
+
+### Adım 2: Tek Adım Euler ile Ne Olur?
+
+$t=0$'dan $t=1$'e tek adımda gitmeye çalışalım:
+
+$$
+\hat{x}_1 = x_0 + 1 \cdot \bar{v}(x_0)
+$$
+
+A noktasından başlarsak:
+$$
+\hat{x}_1 = (0,0) + (1, 0.5) = (1, 0.5)
+$$
+
+**Sonuç:** $(1, 0.5)$ ne X $(1,0)$ ne de Y $(1,1)$. Ortada bir yerde, **geçersiz bir nokta**.
+
+### Adım 3: Rectified Flow (Reflow) Nasıl Düzeltir?
+
+**Reflow Prosedürü:**
+
+1. İlk modeli ($\phi_1$) eğit (yukarıdaki gibi, hatalarla).
+2. Bu modelle 50 adımda üretim yap:
+   - $A \xrightarrow{\phi_1, 50 \text{ steps}} \hat{X}'$ (yaklaşık X'e gider)
+   - $B \xrightarrow{\phi_1, 50 \text{ steps}} \hat{Y}'$ (yaklaşık Y'ye gider)
+3. Artık yeni çiftlerimiz var: $(A, \hat{X}')$ ve $(B, \hat{Y}')$
+4. Bu çiftlerle **yeni model** ($\phi_2$) eğit.
+
+**Sonuç:**
+Yeni modelde A sadece $\hat{X}'$'e, B sadece $\hat{Y}'$'e gidiyor. **Çaprazlama yok!**
+
+```
+Rectified Eşleşmeler:
+(A → X'): (0,0) → (1,0)  ─────→  Velocity: (1, 0)
+(B → Y'): (0,1) → (1,1)  ─────→  Velocity: (1, 0)
+```
+
+Artık her noktanın velocity'si **tek bir hedefe** işaret ediyor:
+$$
+\bar{v}_{rect}(A) = (1, 0) \quad \text{(Sadece X'e)}
+$$
+
+### Adım 4: Tek Adım Euler (Rectified Model)
+
+$$
+\hat{x}_1 = (0,0) + 1 \cdot (1, 0) = (1, 0) = X \quad ✓
+$$
+
+**Mükemmel!** Tek adımda doğru hedefe ulaştık.
+
+### Matematiksel Özet: Transport Matrisi
+
+Bu durumu bir **coupling matrix** olarak gösterebiliriz:
+
+**Flow Matching (Random Coupling):**
+$$
+\Gamma_{FM} = \begin{pmatrix} 0.5 & 0.5 \\ 0.5 & 0.5 \end{pmatrix}
+$$
+Her satır: "A veya B'den X veya Y'ye gitme olasılığı = 0.5"
+
+**Rectified Flow (Deterministic Coupling):**
+$$
+\Gamma_{RF} = \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}
+$$
+A sadece X'e, B sadece Y'ye gidiyor. **Çaprazlama sıfır.**
+
+### Transport Cost Karşılaştırması
+
+**Wasserstein-2 Distance (Optimal Transport Cost):**
+
+Flow Matching:
+$$
+W_2^2(\Gamma_{FM}) = 0.5 \cdot \|A-X\|^2 + 0.5 \cdot \|A-Y\|^2 + 0.5 \cdot \|B-X\|^2 + 0.5 \cdot \|B-Y\|^2
+$$
+$$
+= 0.5(1) + 0.5(2) + 0.5(2) + 0.5(1) = 3
+$$
+
+Rectified Flow:
+$$
+W_2^2(\Gamma_{RF}) = 1 \cdot \|A-X\|^2 + 1 \cdot \|B-Y\|^2 = 1 + 1 = 2
+$$
+
+**Rectified Flow %33 daha düşük transport cost!**
+
+---
+
+## 6. Neden Pratikte 1 Adım Yetmiyor?
+
+Teoride Rectified Flow 1 adımda çalışmalı. Ama pratikte (Flux, SD3 gibi modellerde) 20-50 adım kullanılıyor. Nedenleri:
+
+| Faktör | Açıklama |
+|--------|----------|
+| **Sonsuz Veri Yok** | Tam "düz yol" öğrenmek için sonsuz veri gerekir |
+| **Yüksek Boyut** | CIFAR: 3K boyut, SD3: 3M boyut. Düz yol çekmek zorlaşır |
+| **Multi-Modal** | Milyonlarca konsept var, tek bir "düz yol" imkansız |
+| **CFG Guidance** | Classifier-Free Guidance her adımda uygulanır |
+| **Kalite vs Hız** | 20 adım = mükemmel kalite, 1 adım = kabul edilebilir |
+
+**Sonuç:** Reflow, adım sayısını 1000'den 20-50'ye düşürür. Bu devasa bir gelişme ama "1 adım" henüz pratikte ulaşılamıyor.
+
+---
+
+## 7. Kodda Ne Değişirdi?
 
 Eğer projemize Reflow ekleseydik:
 
@@ -104,7 +246,7 @@ Eğer projemize Reflow ekleseydik:
 
 ---
 
-## 6. Referanslar
+## 8. Referanslar
 
 *   [Flow Straight and Fast: Learning to Generate with One-Step Flow Matching](https://arxiv.org/abs/2210.02747) (Orijinal Flow Matching)
 *   [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747)
