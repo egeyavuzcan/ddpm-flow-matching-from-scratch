@@ -226,5 +226,7 @@ tensorboard/
 *.jpeg
 !docs/*.png
 !docs/*.jpg
+!source/*.png
+!source/*.jpg
 !*.md
 
