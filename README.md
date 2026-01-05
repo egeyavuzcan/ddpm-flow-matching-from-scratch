@@ -1,5 +1,38 @@
 # DDPM vs Flow Matching: From Scratch
 
+## 📈 Results
+
+### Training Loss Comparison (100 Epochs, UNet)
+
+![Training Loss](source/training_loss_comparison.png)
+
+**Key Observations:**
+- **DDPM**: Lower loss (~0.03) but predicts noise ε
+- **Flow Matching**: Higher loss (~0.16) but predicts velocity v
+- ⚠️ **Loss values are NOT comparable** - different prediction targets!
+
+### Sample Quality
+
+**Flow Matching (300 epochs):**
+
+![Flow Matching Samples](source/sample_flow_matching_grid.png)
+
+*High-quality, diverse CIFAR-10 samples showing airplanes, cars, animals, and ships with clear details.*
+
+**DDPM vs Flow Matching (100 epochs):**
+
+![Horse Comparison](source/class_7_horse.png)
+
+*Top: DDPM (noisy), Bottom: Flow Matching (smooth and coherent)*
+
+### DiT (Diffusion Transformer) Results
+We evaluated **DiT-S** (Small) alongside UNet.
+- **DiT-S (DDPM)** achieved a loss of **0.054** after 200 epochs (vs UNet 0.033).
+- Transformers generally require more training than CNNs for this task.
+- Full analysis: [docs/results.md](docs/results.md)
+
+---
+
 ## 🎯 Project Goal
 The primary objective of this project is to demonstrate the **mathematical and implementation differences** between **DDPM** (Denoising Diffusion Probabilistic Models) and **Flow Matching**.
 
@@ -159,39 +192,6 @@ sampling:
 - 🎯 Better sample quality (lower loss)
 - 📈 Scales well with more data/compute
 - 🔬 Modern architecture (used in DALL-E 3, SD3)
-
----
-
-## 📈 Results
-
-### Training Loss Comparison (100 Epochs, UNet)
-
-![Training Loss](outputs/results/training_loss_comparison.png)
-
-**Key Observations:**
-- **DDPM**: Lower loss (~0.03) but predicts noise ε
-- **Flow Matching**: Higher loss (~0.16) but predicts velocity v
-- ⚠️ **Loss values are NOT comparable** - different prediction targets!
-
-### Sample Quality
-
-**Flow Matching (300 epochs):**
-
-![Flow Matching Samples](outputs/samples/epoch_310/flow_matching/sample_flow_matching_grid.png)
-
-*High-quality, diverse CIFAR-10 samples showing airplanes, cars, animals, and ships with clear details.*
-
-**DDPM vs Flow Matching (100 epochs):**
-
-![Horse Comparison](outputs/comparison/class_7_horse.png)
-
-*Top: DDPM (noisy), Bottom: Flow Matching (smooth and coherent)*
-
-### DiT (Diffusion Transformer) Results
-We evaluated **DiT-S** (Small) alongside UNet.
-- **DiT-S (DDPM)** achieved a loss of **0.054** after 200 epochs (vs UNet 0.033).
-- Transformers generally require more training than CNNs for this task.
-- Full analysis: [docs/results.md](docs/results.md)
 
 ---
 
