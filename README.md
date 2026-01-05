@@ -25,6 +25,11 @@
 
 *Top: DDPM (noisy), Bottom: Flow Matching (smooth and coherent)*
 
+**DDPM 300 epochs:**
+
+![Horse Comparison](source/ddpm_samples.png)
+
+
 ### DiT (Diffusion Transformer) Results
 We evaluated **DiT-S** (Small) alongside UNet.
 - **DiT-S (DDPM)** achieved a loss of **0.054** after 200 epochs (vs UNet 0.033).
